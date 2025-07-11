@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频封面设计工具 - 优化版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Nunito:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #5e72e4;
+            --secondary: #11cdef;
+            --success: #2dce89;
+            --info: #11cdef;
+            --warning: #fb6340;
+            --danger: #f5365c;
+            --light: #f8f9fe;
+            --dark: #1a1d2e;
+            --text: #525f7f;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --border: #e9ecef;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            --radius: 16px;
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', 'Nunito', sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(94, 114, 228, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(17, 205, 239, 0.05) 0%, transparent 20%);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(94, 114, 228, 0.3);
+        }
+        
+        .logo-icon i {
+            font-size: 28px;
+            color: white;
+        }
+        
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        header p {
+            color: var(--text);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+        
+        /* 画布区域 */
+        .canvas-container {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .canvas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .canvas-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .canvas-header h2 i {
+            color: var(--primary);
+        }
+        
+        .canvas-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .canvas-controls button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 10px rgba(94, 114, 228, 0.3);
+        }
+        
+        .canvas-controls button:hover {
+            background: #4a5cd3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(94, 114, 228, 0.4);
+        }
+        
+        .canvas-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 12px;
+            overflow: auto;
+            position: relative;
+            border: 1px dashed var(--border);
+            padding: 20px;
+        }
+        
+        #cover-canvas {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 400px;
+            height: 400px;
+        }
+        
+        .text-element {
+            position: absolute;
+            color: white;
+            font-size: 32px; /* 初始文字大小调整为32px */
+            font-weight: bold;
+            text-align: center;
+            max-width: 80%;
+            padding: 10px;
+            cursor: default;
+            user-select: none;
+            transition: var(--transition);
+            outline: 1px dashed transparent;
+        }
+        
+        .text-element.active {
+            outline: 1px dashed var(--primary);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* 控制面板 - 可折叠部分 */
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .panel-section {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: var(--light);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .panel-header:hover {
+            background: #e9ecef;
+        }
+        
+        .panel-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            color: var(--dark);
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .panel-header h3 i {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+        
+        .panel-header .toggle-icon {
+            transition: var(--transition);
+        }
+        
+        .panel-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        
+        .panel-section.active .panel-content {
+            padding: 25px;
+            max-height: 1000px;
+        }
+        
+        .panel-section.active .panel-header .toggle-icon {
+            transform: rotate(180deg);
+        }
+        
+        /* 尺寸控制 */
+        .dimension-presets {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .dimension-btn {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 12px 5px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .dimension-btn:hover, .dimension-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(94, 114, 228, 0.3);
+        }
+        
+        .dimension-custom {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .dimension-custom .input-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .dimension-custom label {
+            font-size: 0.9rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+        
+        .dimension-custom input {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--border);
+            color: var(--dark);
+            padding: 12px 15px;
+            border-radius: 10px;
+            outline: none;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        
+        .dimension-custom input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(94, 114, 228, 0.2);
+        }
+        
+        /* 颜色选择 */
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .color-item {
+            aspect-ratio: 1/1;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .color-item:hover {
+            transform: scale(1.1);
+        }
+        
+        .color-custom {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .color-custom input {
+            flex: 1;
+            height: 45px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .color-custom span {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+        
+        /* 文本控制 */
+        .text-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .control-group label {
+            font-size: 0.95rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+        
+        .control-group input, .control-group select {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--border);
+            color: var(--dark);
+            padding: 12px 15px;
+            border-radius: 10px;
+            outline: none;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        
+        .control-group input:focus, .control-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(94, 114, 228, 0.2);
+        }
+        
+        .position-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .position-control {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .position-control input {
+            width: 100%;
+        }
+        
+        /* 文本列表 */
+        .text-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .text-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 2px solid transparent;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+        }
+        
+        .text-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .text-item.active {
+            border-color: var(--primary);
+            background: rgba(94, 114, 228, 0.05);
+        }
+        
+        .text-item .text-preview {
+            font-size: 1rem;
+            font-weight: 500;
+            max-width: 70%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .text-item .actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .text-item .actions button {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--light);
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .text-item .actions button:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .add-text-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 10px rgba(45, 206, 137, 0.3);
+        }
+        
+        .add-text-btn:hover {
+            background: #26b97c;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(45, 206, 137, 0.4);
+        }
+        
+        /* 预设区域 */
+        .preset-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .preset-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .preset-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border: 2px solid transparent;
+        }
+        
+        .preset-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .preset-item.active {
+            border-color: var(--primary);
+        }
+        
+        .preset-item .preview {
+            width: 100%;
+            height: 80px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .preset-item h4 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            color: var(--dark);
+        }
+        
+        .preset-item p {
+            font-size: 0.85rem;
+            color: var(--text);
+            opacity: 0.8;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 20px;
+            color: var(--text);
+            font-size: 0.95rem;
+            opacity: 0.7;
+        }
+        
+        /* 响应式设计 */
+        @media (min-width: 768px) {
+            .dimension-presets {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .preset-list {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        @media (max-width: 767px) {
+            .text-controls, .dimension-presets, .preset-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .color-palette {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .dimension-custom {
+                flex-direction: column;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            #cover-canvas {
+                width: 100%;
+                max-width: 400px;
+                height: auto;
+                aspect-ratio: 1/1;
+            }
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .panel-section {
+            animation: fadeIn 0.4s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-photo-video"></i>
+                </div>
+                <h1>视频封面设计工具</h1>
+            </div>
+            <p>轻松创建专业级视频封面 - 支持多文本、高级效果和精美模板</p>
+        </header>
+        
+        <div class="canvas-container">
+            <div class="canvas-header">
+                <h2><i class="fas fa-paint-brush"></i> 封面预览</h2>
+                <div class="canvas-controls">
+                    <button id="reset-btn"><i class="fas fa-redo"></i> 重置</button>
+                    <button id="download-btn"><i class="fas fa-download"></i> 下载封面</button>
+                </div>
+            </div>
+            
+            <div class="canvas-wrapper">
+                <div id="cover-canvas">
+                    <div class="text-element active" id="text-element-1" style="font-size: 32px; top: 50%; left: 50%; transform: translate(-50%, -50%);">视频标题</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-panel">
+            <!-- 尺寸设置 -->
+            <div class="panel-section active">
+                <div class="panel-header">
+                    <h3><i class="fas fa-ruler-combined"></i> 尺寸设置</h3>
+                    <div class="toggle-icon">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div class="dimension-presets">
+                        <div class="dimension-btn" data-ratio="9/16" data-width="1089" data-height="1920">9:16 (手机竖屏)</div>
+                        <div class="dimension-btn" data-ratio="16/9" data-width="1280" data-height="720">16:9 (宽屏)</div>
+                        <div class="dimension-btn active" data-ratio="1/1" data-width="502" data-height="520">1:1 (正方形)</div>
+                        <div class="dimension-btn" data-ratio="3/2" data-width="1080" data-height="720">3:2 (传统)</div>
+                    </div>
+                    <div class="dimension-custom">
+                        <div class="input-group">
+                            <label for="width-input">宽度</label>
+                            <input type="number" id="width-input" value="502">
+                        </div>
+                        <div class="input-group">
+                            <label for="height-input">高度</label>
+                            <input type="number" id="height-input" value="520">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 背景颜色 -->
+            <div class="panel-section">
+                <div class="panel-header">
+                    <h3><i class="fas fa-palette"></i> 背景颜色</h3>
+                    <div class="toggle-icon">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div class="color-palette">
+                        <div class="color-item" style="background-color: #5e72e4;" data-color="#5e72e4"></div>
+                        <div class="color-item" style="background-color: #11cdef;" data-color="#11cdef"></div>
+                        <div class="color-item" style="background-color: #2dce89;" data-color="#2dce89"></div>
+                        <div class="color-item" style="background-color: #fb6340;" data-color="#fb6340"></div>
+                        <div class="color-item" style="background-color: #f5365c;" data-color="#f5365c"></div>
+                        <div class="color-item" style="background-color: #5603ad;" data-color="#5603ad"></div>
+                        <div class="color-item" style="background-color: #2d6a4f;" data-color="#2d6a4f"></div>
+                        <div class="color-item" style="background-color: #f7f9fc;" data-color="#f7f9fc"></div>
+                        <div class="color-item" style="background-color: #1a1d2e;" data-color="#1a1d2e"></div>
+                        <div class="color-item" style="background-color: #f8fafc;" data-color="#f8fafc"></div>
+                        <div class="color-item" style="background-color: #ffffff;" data-color="#ffffff"></div>
+                        <div class="color-item" style="background-color: #000000;" data-color="#000000"></div>
+                    </div>
+                    <div class="color-custom">
+                        <input type="color" id="custom-color" value="#5e72e4">
+                        <span>自定义颜色</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 文本管理 -->
+            <div class="panel-section">
+                <div class="panel-header">
+                    <h3><i class="fas fa-font"></i> 文本管理</h3>
+                    <div class="toggle-icon">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div class="text-list" id="text-list">
+                        <div class="text-item active" data-id="1">
+                            <div class="text-preview">视频标题</div>
+                            <div class="actions">
+                                <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="add-text-btn" id="add-text-btn">
+                        <i class="fas fa-plus"></i> 添加新文本
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 文本设置 -->
+            <div class="panel-section">
+                <div class="panel-header">
+                    <h3><i class="fas fa-sliders-h"></i> 文本设置</h3>
+                    <div class="toggle-icon">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div class="text-controls">
+                        <div class="control-group">
+                            <label for="text-content">文本内容</label>
+                            <input type="text" id="text-content" value="视频标题" placeholder="输入文本内容">
+                        </div>
+                        <div class="control-group">
+                            <label for="font-size">字体大小</label>
+                            <input type="range" id="font-size" min="20" max="120" value="32">
+                        </div>
+                        <div class="control-group">
+                            <label for="text-color">文字颜色</label>
+                            <input type="color" id="text-color" value="#ffffff">
+                        </div>
+                        <div class="control-group">
+                            <label for="font-family">字体样式</label>
+                            <select id="font-family">
+                                <option value="'Poppins', sans-serif">Poppins</option>
+                                <option value="'Nunito', sans-serif">Nunito</option>
+                                <option value="'Arial', sans-serif">Arial</option>
+                                <option value="'Times New Roman', serif">Times New Roman</option>
+                                <option value="'Courier New', monospace">Courier New</option>
+                                <option value="'Impact', sans-serif">Impact</option>
+                                <option value="'Georgia', serif">Georgia</option>
+                                <option value="'Verdana', sans-serif">Verdana</option>
+                                <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="position-controls">
+                        <div class="position-control">
+                            <label for="pos-x">水平位置 (X)</label>
+                            <input type="range" id="pos-x" min="0" max="100" value="50">
+                        </div>
+                        <div class="position-control">
+                            <label for="pos-y">垂直位置 (Y)</label>
+                            <input type="range" id="pos-y" min="0" max="100" value="50">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 预设模板 -->
+            <div class="panel-section">
+                <div class="panel-header">
+                    <h3><i class="fas fa-swatchbook"></i> 预设模板</h3>
+                    <div class="toggle-icon">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div class="preset-list">
+                        <div class="preset-item active" data-preset="modern">
+                            <div class="preview" style="background: linear-gradient(135deg, #5e72e4, #11cdef);"></div>
+                            <h4>现代风格</h4>
+                            <p>渐变背景，简洁文字</p>
+                        </div>
+                        <div class="preset-item" data-preset="minimal">
+                            <div class="preview" style="background: #ffffff; border: 1px solid #e9ecef;"></div>
+                            <h4>极简风格</h4>
+                            <p>纯白背景，黑色文字</p>
+                        </div>
+                        <div class="preset-item" data-preset="dark">
+                            <div class="preview" style="background: #1a1d2e;"></div>
+                            <h4>深色主题</h4>
+                            <p>深色背景，亮色文字</p>
+                        </div>
+                        <div class="preset-item" data-preset="vibrant">
+                            <div class="preview" style="background: #f5365c;"></div>
+                            <h4>活力风格</h4>
+                            <p>鲜艳背景，粗体文字</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2023 视频封面设计工具 | 使用HTML5, CSS3和JavaScript构建</p>
+        </footer>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const canvas = document.getElementById('cover-canvas');
+            const textList = document.getElementById('text-list');
+            const dimensionBtns = document.querySelectorAll('.dimension-btn');
+            const widthInput = document.getElementById('width-input');
+            const heightInput = document.getElementById('height-input');
+            const colorItems = document.querySelectorAll('.color-item');
+            const customColor = document.getElementById('custom-color');
+            const textContent = document.getElementById('text-content');
+            const fontSize = document.getElementById('font-size');
+            const textColor = document.getElementById('text-color');
+            const fontFamily = document.getElementById('font-family');
+            const posX = document.getElementById('pos-x');
+            const posY = document.getElementById('pos-y');
+            const addTextBtn = document.getElementById('add-text-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const downloadBtn = document.getElementById('download-btn');
+            const presetItems = document.querySelectorAll('.preset-item');
+            const panelSections = document.querySelectorAll('.panel-section');
+            
+            // 当前活动文本元素
+            let activeTextElement = document.querySelector('.text-element.active');
+            let activeTextId = 1;
+            let textCount = 1;
+            
+            // 设置初始尺寸
+            setCanvasSize(502, 520);
+            
+            // 面板折叠功能
+            panelSections.forEach(section => {
+                const header = section.querySelector('.panel-header');
+                header.addEventListener('click', () => {
+                    section.classList.toggle('active');
+                });
+            });
+            
+            // 尺寸预设按钮事件
+            dimensionBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dimensionBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    const width = parseInt(btn.dataset.width);
+                    const height = parseInt(btn.dataset.height);
+                    
+                    widthInput.value = width;
+                    heightInput.value = height;
+                    setCanvasSize(width, height);
+                    updateTextPosition(activeTextId);
+                });
+            });
+            
+            // 自定义尺寸事件
+            widthInput.addEventListener('input', updateCanvasSize);
+            heightInput.addEventListener('input', updateCanvasSize);
+            
+            // 背景颜色事件
+            colorItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const color = item.dataset.color;
+                    canvas.style.background = color;
+                    customColor.value = color;
+                });
+            });
+            
+            customColor.addEventListener('input', () => {
+                canvas.style.background = customColor.value;
+            });
+            
+            // 文本设置事件
+            textContent.addEventListener('input', () => {
+                activeTextElement.textContent = textContent.value;
+                updateTextItemPreview(activeTextId, textContent.value);
+            });
+            
+            fontSize.addEventListener('input', () => {
+                activeTextElement.style.fontSize = `${fontSize.value}px`;
+            });
+            
+            textColor.addEventListener('input', () => {
+                activeTextElement.style.color = textColor.value;
+            });
+            
+            fontFamily.addEventListener('change', () => {
+                activeTextElement.style.fontFamily = fontFamily.value;
+            });
+            
+            // 位置控制事件
+            posX.addEventListener('input', () => {
+                updateTextPosition(activeTextId);
+            });
+            
+            posY.addEventListener('input', () => {
+                updateTextPosition(activeTextId);
+            });
+            
+            // 添加新文本
+            addTextBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const textId = Date.now();
+                textCount++;
+                
+                const textItem = document.createElement('div');
+                textItem.className = 'text-item';
+                textItem.dataset.id = textId;
+                textItem.innerHTML = `
+                    <div class="text-preview">新文本${textCount}</div>
+                    <div class="actions">
+                        <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                
+                textList.appendChild(textItem);
+                
+                const textElement = document.createElement('div');
+                textElement.className = 'text-element';
+                textElement.id = `text-element-${textId}`;
+                textElement.textContent = `新文本${textCount}`;
+                textElement.style.fontSize = '32px';
+                
+                // 设置新文本位置（避免重叠）
+                const prevElement = document.querySelector('.text-element:last-child');
+                let topPosition = 50;
+                if (prevElement) {
+                    const prevRect = prevElement.getBoundingClientRect();
+                    const canvasRect = canvas.getBoundingClientRect();
+                    const prevTop = parseInt(prevElement.style.top) || 0;
+                    topPosition = Math.min(prevTop + 70, 90); // 70px偏移量
+                }
+                
+                textElement.style.top = `${topPosition}px`;
+                textElement.style.left = '50%';
+                textElement.style.transform = 'translateX(-50%)';
+                
+                canvas.appendChild(textElement);
+                
+                // 激活新文本
+                activateText(textId);
+                
+                // 添加删除事件
+                textItem.querySelector('.delete-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteText(textId);
+                });
+                
+                // 点击激活
+                textItem.addEventListener('click', () => {
+                    activateText(textId);
+                });
+            });
+            
+            // 为初始文本添加删除事件
+            document.querySelector('.text-item[data-id="1"] .delete-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteText(1);
+            });
+            
+            // 点击初始文本激活
+            document.querySelector('.text-item[data-id="1"]').addEventListener('click', () => {
+                activateText(1);
+            });
+            
+            // 预设功能
+            presetItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    presetItems.forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    
+                    const preset = item.dataset.preset;
+                    applyPreset(preset);
+                });
+            });
+            
+            // 重置按钮
+            resetBtn.addEventListener('click', resetToDefault);
+            
+            // 下载按钮
+            downloadBtn.addEventListener('click', downloadCover);
+            
+            // 函数定义
+            function setCanvasSize(width, height) {
+                // 在界面上显示缩放后的尺寸（最大宽度400px）
+                const maxWidth = 400;
+                let displayWidth = width;
+                let displayHeight = height;
+                
+                if (width > maxWidth) {
+                    const ratio = maxWidth / width;
+                    displayWidth = maxWidth;
+                    displayHeight = height * ratio;
+                }
+                
+                canvas.style.width = `${displayWidth}px`;
+                canvas.style.height = `${displayHeight}px`;
+                
+                // 更新位置滑块
+                updateTextPosition(activeTextId);
+            }
+            
+            function updateCanvasSize() {
+                const width = parseInt(widthInput.value) || 502;
+                const height = parseInt(heightInput.value) || 520;
+                setCanvasSize(width, height);
+            }
+            
+            function updateTextPosition(id) {
+                const textElement = document.getElementById(`text-element-${id}`);
+                if (!textElement) return;
+                
+                const canvasWidth = canvas.offsetWidth;
+                const canvasHeight = canvas.offsetHeight;
+                
+                const x = (posX.value / 100) * (canvasWidth - textElement.offsetWidth);
+                const y = (posY.value / 100) * (canvasHeight - textElement.offsetHeight);
+                
+                textElement.style.left = `${x}px`;
+                textElement.style.top = `${y}px`;
+                textElement.style.transform = 'none';
+            }
+            
+            function activateText(id) {
+                // 更新文本列表
+                document.querySelectorAll('.text-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                document.querySelector(`.text-item[data-id="${id}"]`).classList.add('active');
+                
+                // 更新文本元素
+                document.querySelectorAll('.text-element').forEach(el => {
+                    el.classList.remove('active');
+                });
+                activeTextElement = document.getElementById(`text-element-${id}`);
+                activeTextElement.classList.add('active');
+                activeTextId = id;
+                
+                // 更新控制面板
+                textContent.value = activeTextElement.textContent;
+                fontSize.value = parseInt(activeTextElement.style.fontSize) || 32;
+                textColor.value = rgbToHex(activeTextElement.style.color) || '#ffffff';
+                
+                // 更新位置滑块
+                const canvasWidth = canvas.offsetWidth;
+                const canvasHeight = canvas.offsetHeight;
+                const textLeft = parseInt(activeTextElement.style.left) || canvasWidth/2;
+                const textTop = parseInt(activeTextElement.style.top) || canvasHeight/2;
+                
+                posX.value = Math.round((textLeft / (canvasWidth - activeTextElement.offsetWidth)) * 100) || 50;
+                posY.value = Math.round((textTop / (canvasHeight - activeTextElement.offsetHeight)) * 100) || 50;
+            }
+            
+            function deleteText(id) {
+                const textItem = document.querySelector(`.text-item[data-id="${id}"]`);
+                const textElement = document.getElementById(`text-element-${id}`);
+                
+                if (textItem && textElement) {
+                    // 至少保留一个文本元素
+                    const textItems = document.querySelectorAll('.text-item');
+                    if (textItems.length <= 1) {
+                        alert("至少需要保留一个文本元素！");
+                        return;
+                    }
+                    
+                    textItem.remove();
+                    textElement.remove();
+                    
+                    // 如果删除了当前活动文本，则激活第一个文本
+                    if (activeTextId === id) {
+                        const firstItem = document.querySelector('.text-item');
+                        if (firstItem) {
+                            activateText(firstItem.dataset.id);
+                        }
+                    }
+                }
+            }
+            
+            function updateTextItemPreview(id, text) {
+                const textItem = document.querySelector(`.text-item[data-id="${id}"]`);
+                if (textItem) {
+                    textItem.querySelector('.text-preview').textContent = text;
+                }
+            }
+            
+            function applyPreset(preset) {
+                switch(preset) {
+                    case 'modern':
+                        canvas.style.background = 'linear-gradient(135deg, #5e72e4, #11cdef)';
+                        customColor.value = '#5e72e4';
+                        activeTextElement.style.color = '#ffffff';
+                        textColor.value = '#ffffff';
+                        activeTextElement.style.fontSize = '42px';
+                        fontSize.value = '42';
+                        activeTextElement.style.fontFamily = "'Poppins', sans-serif";
+                        fontFamily.value = "'Poppins', sans-serif";
+                        break;
+                    case 'minimal':
+                        canvas.style.background = '#ffffff';
+                        customColor.value = '#ffffff';
+                        activeTextElement.style.color = '#1a1d2e';
+                        textColor.value = '#1a1d2e';
+                        activeTextElement.style.fontSize = '36px';
+                        fontSize.value = '36';
+                        activeTextElement.style.fontFamily = "'Nunito', sans-serif";
+                        fontFamily.value = "'Nunito', sans-serif";
+                        break;
+                    case 'dark':
+                        canvas.style.background = '#1a1d2e';
+                        customColor.value = '#1a1d2e';
+                        activeTextElement.style.color = '#11cdef';
+                        textColor.value = '#11cdef';
+                        activeTextElement.style.fontSize = '38px';
+                        fontSize.value = '38';
+                        activeTextElement.style.fontFamily = "'Arial', sans-serif";
+                        fontFamily.value = "'Arial', sans-serif";
+                        break;
+                    case 'vibrant':
+                        canvas.style.background = '#f5365c';
+                        customColor.value = '#f5365c';
+                        activeTextElement.style.color = '#ffffff';
+                        textColor.value = '#ffffff';
+                        activeTextElement.style.fontSize = '46px';
+                        fontSize.value = '46';
+                        activeTextElement.style.fontFamily = "'Impact', sans-serif";
+                        fontFamily.value = "'Impact', sans-serif";
+                        break;
+                }
+            }
+            
+            function resetToDefault() {
+                // 清空所有文本元素
+                document.querySelectorAll('.text-element').forEach(el => {
+                    if (el.id !== 'text-element-1') {
+                        el.remove();
+                    }
+                });
+                
+                // 清空文本列表
+                const textList = document.getElementById('text-list');
+                while (textList.children.length > 1) {
+                    textList.removeChild(textList.lastChild);
+                }
+                
+                // 重置尺寸
+                dimensionBtns[2].classList.add('active');
+                dimensionBtns.forEach((btn, index) => {
+                    if(index !== 2) btn.classList.remove('active');
+                });
+                widthInput.value = '502';
+                heightInput.value = '520';
+                setCanvasSize(502, 520);
+                
+                // 重置背景
+                canvas.style.background = 'linear-gradient(135deg, #5e72e4, #11cdef)';
+                customColor.value = '#5e72e4';
+                
+                // 重置文本
+                textContent.value = '视频标题';
+                activeTextElement.textContent = '视频标题';
+                fontSize.value = '32';
+                activeTextElement.style.fontSize = '32px';
+                textColor.value = '#ffffff';
+                activeTextElement.style.color = '#ffffff';
+                fontFamily.value = "'Poppins', sans-serif";
+                activeTextElement.style.fontFamily = "'Poppins', sans-serif";
+                activeTextElement.style.top = '50%';
+                activeTextElement.style.left = '50%';
+                activeTextElement.style.transform = 'translate(-50%, -50%)';
+                
+                // 重置位置
+                posX.value = '50';
+                posY.value = '50';
+                
+                // 重置预设
+                presetItems[0].classList.add('active');
+                presetItems.forEach((item, index) => {
+                    if(index !== 0) item.classList.remove('active');
+                });
+                
+                // 激活初始文本
+                activateText(1);
+                textCount = 1;
+            }
+            
+            function downloadCover() {
+                // 创建临时canvas
+                const tempCanvas = document.createElement('canvas');
+                const ctx = tempCanvas.getContext('2d');
+                
+                // 设置canvas尺寸
+                const width = parseInt(widthInput.value) || 502;
+                const height = parseInt(heightInput.value) || 520;
+                tempCanvas.width = width;
+                tempCanvas.height = height;
+                
+                // 绘制背景
+                const bgColor = canvas.style.background;
+                if (bgColor.includes('gradient')) {
+                    // 对于渐变背景，创建一个线性渐变
+                    const gradient = ctx.createLinearGradient(0, 0, width, height);
+                    if (bgColor.includes('#5e72e4')) {
+                        gradient.addColorStop(0, '#5e72e4');
+                        gradient.addColorStop(1, '#11cdef');
+                    } else {
+                        // 通用渐变处理
+                        const colors = bgColor.match(/#[0-9a-f]{6}/gi);
+                        if (colors && colors.length > 1) {
+                            for (let i = 0; i < colors.length; i++) {
+                                gradient.addColorStop(i / (colors.length - 1), colors[i]);
+                            }
+                        }
+                    }
+                    ctx.fillStyle = gradient;
+                } else {
+                    ctx.fillStyle = bgColor;
+                }
+                ctx.fillRect(0, 0, width, height);
+                
+                // 绘制所有文本元素
+                document.querySelectorAll('.text-element').forEach(textEl => {
+                    // 获取文本样式
+                    const fontSize = parseInt(textEl.style.fontSize) || 32;
+                    const fontFamily = textEl.style.fontFamily || "'Poppins', sans-serif";
+                    const color = textEl.style.color || '#ffffff';
+                    
+                    // 设置文本样式
+                    ctx.font = `${fontSize}px ${fontFamily}`;
+                    ctx.fillStyle = color;
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'top';
+                    
+                    // 计算原始尺寸中的位置
+                    const canvasWidth = canvas.offsetWidth;
+                    const canvasHeight = canvas.offsetHeight;
+                    const textX = parseInt(textEl.style.left) || 0;
+                    const textY = parseInt(textEl.style.top) || 0;
+                    
+                    // 转换为原始尺寸位置
+                    const origX = (textX / canvasWidth) * width;
+                    const origY = (textY / canvasHeight) * height;
+                    
+                    // 绘制文本
+                    ctx.fillText(textEl.textContent, origX, origY);
+                });
+                
+                // 创建下载链接
+                const link = document.createElement('a');
+                link.download = `video-cover-${new Date().getTime()}.png`;
+                link.href = tempCanvas.toDataURL('image/png');
+                link.click();
+                
+                // 显示下载成功消息
+                const originalText = downloadBtn.innerHTML;
+                downloadBtn.innerHTML = '<i class="fas fa-check"></i> 下载成功！';
+                downloadBtn.style.background = '#2dce89';
+                
+                setTimeout(() => {
+                    downloadBtn.innerHTML = originalText;
+                    downloadBtn.style.background = '';
+                }, 2000);
+            }
+            
+            // 辅助函数：RGB转十六进制
+            function rgbToHex(rgb) {
+                if (!rgb) return '#ffffff';
+                
+                // 匹配rgb(r, g, b)格式
+                const match = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+                if (match) {
+                    const r = parseInt(match[1]).toString(16).padStart(2, '0');
+                    const g = parseInt(match[2]).toString(16).padStart(2, '0');
+                    const b = parseInt(match[3]).toString(16).padStart(2, '0');
+                    return `#${r}${g}${b}`;
+                }
+                
+                return rgb;
+            }
+        });
+    </script>
+</body>
+</html>
